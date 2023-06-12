@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>RENDERER</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+
+</head>
+
+<body style="background-color: black;">
+    <canvas id="c" width="512" height="512"
+        style="border:5px solid #00FF00; position:absolute;top:50%;left:50%; transform: translate(-50%,-50%);height:90%;aspect-ratio: 1/1;image-rendering: pixelated;"></canvas>
+    <script>
+        const dot = (a, b) => a.map((x, i) => a[i] * b[i]).reduce((m, n) => m + n);
+        const dist = (a, b) => Math.sqrt(Math.pow(b[0] - a[0], 2) + Math.pow(b[1] - a[1], 2) + Math.pow(b[2] - a[2], 2));
+        const vadd = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+        const vsub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+        const vmul = (a, b) => [a[0] * b[0], a[1] * b[1], a[2] * b[2]];
+        const vdiv = (a, b) => [a[0] / b[0], a[1] / b[1], a[2] / b[2]];
+        const normalize = v => {
+            od = dist([0, 0, 0], v);
+            return [v[0] / od, v[1] / od, v[2] / od];
+        }
+        const c = document.getElementById("c").getContext("2d");
+        c.fillStyle = "#00FF00";
+        c.strokeStyle = "#00FF00";
+        c.lineWidth = 5;
+        const shape = [
+            [
+                [0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]
+            ],
+            [
+                [0, 0, 2], [1, 0, 2], [1, 1, 2], [0, 1, 2]
+            ],
+            [[0, 0, 0], [0, 0, 2]],
+            [[0, 1, 0], [0, 1, 2]],
+            [[1, 0, 0], [1, 0, 2]],
+            [[1, 1, 0], [1, 1, 2]]
+        ];
+        const campos = { x: 5, y: 5, z: 5 };
+        const camrot = { x: 315, y: 0, z: 315 };
+        const eq = { a: 1, b: 1, c: 1, d: -15 };
+        const n = [1, 1, 1];
+        const tn = normalize([-1, -1, 1]);
+        const rn = normalize([-1, 1, 0]);
+        const nn = normalize(n);
+        const planedist = p => (Math.abs(eq.a * p[0] + eq.b * p[1] + eq.c * p[2] + eq.d) / Math.sqrt(Math.pow(eq.a, 2) + Math.pow(eq.b, 2) + Math.pow(eq.c, 2)));
+        const project = (p, dist) => [p[0] + (nn[0] * dist), p[1] + (nn[1] * dist), p[2] + (nn[2] * dist)];
+        function v2ToAng(v) {
+            ang = Math.asin(v[1]);
+            if (v[0] < 0) {
+                ang = Math.PI - ang;
+            }
+            if (ang < 0) {
+                ang += Math.PI * 2;
+            }
+            return ang;
+        }
+        function cycle() {
+            c.clearRect(0, 0, 512, 512);
+            for (i = 0; i < shape.length; i++) {
+                pd = planedist(shape[i][0]);
+                pp = project(shape[i][0], pd);
+                pv = vsub(pp, [5, 5, 5]);
+                bmul = (rn[1] * (pp[0] - 5)) + (rn[0] * (5 - pp[1])) / (rn[0] * tn[1] - rn[1] * tn[0]);
+                amul = (pp[0] + bmul * tn[0] - 5) / rn[0];
+                c.beginPath();
+                c.moveTo(256 + amul * 200, 256 + bmul * 200);
+                for (j = 1; j < shape[i].length; j++) {
+                    pd = planedist(shape[i][j]);
+                    pp = project(shape[i][j], pd);
+                    pv = vsub(pp, [5, 5, 5]);
+                    bmul = (rn[1] * (pp[0] - 5)) + (rn[0] * (5 - pp[1])) / (rn[0] * tn[1] - rn[1] * tn[0]);
+                    amul = (pp[0] + bmul * tn[0] - 5) / rn[0];
+                    c.lineTo(256 + amul * 200, 256 + bmul * 200);
+                    c.stroke();
+                }
+                pd = planedist(shape[i][0]);
+                pp = project(shape[i][0], pd);
+                pv = vsub(pp, [5, 5, 5]);
+                bmul = (rn[1] * (pp[0] - 5)) + (rn[0] * (5 - pp[1])) / (rn[0] * tn[1] - rn[1] * tn[0]);
+                amul = (pp[0] + bmul * tn[0] - 5) / rn[0];
+                c.lineTo(256 + amul * 200, 256 + bmul * 200);
+                c.stroke();
+            }
+            for (i = 0; i < shape.length; i++) {
+                for (j = 0; j < shape[i].length; j++) {
+                    currang = v2ToAng([(shape[i][j][0] - 0.5) / (Math.SQRT2 / 2), (shape[i][j][1] - 0.5) / (Math.SQRT2 / 2)]);
+                    currang = currang + 0.01;
+                    console.log(currang * 180 / Math.PI);
+                    shape[i][j][0] = Math.cos(currang) * (Math.SQRT2 / 2) + 0.5;
+                    shape[i][j][1] = Math.sin(currang) * (Math.SQRT2 / 2) + 0.5;
+                }
+            }
+        }
+        //I DONT KNOW WHY I WASTED MY BRAINCELLS DOING THIS
+        setInterval(cycle, 1);
+    </script>
+</body>
+
+</html>
