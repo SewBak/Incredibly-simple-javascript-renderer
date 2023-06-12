@@ -88,7 +88,6 @@
                 for (j = 0; j < shape[i].length; j++) {
                     currang = v2ToAng([(shape[i][j][0] - 0.5) / (Math.SQRT2 / 2), (shape[i][j][1] - 0.5) / (Math.SQRT2 / 2)]);
                     currang = currang + 0.01;
-                    console.log(currang * 180 / Math.PI);
                     shape[i][j][0] = Math.cos(currang) * (Math.SQRT2 / 2) + 0.5;
                     shape[i][j][1] = Math.sin(currang) * (Math.SQRT2 / 2) + 0.5;
                 }
