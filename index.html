@@ -26,23 +26,32 @@
         c.fillStyle = "#00FF00";
         c.strokeStyle = "#00FF00";
         c.lineWidth = 5;
-        const shape = [
+        const shapes = [[
             [
                 [0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]
             ],
             [
-                [0, 0, 2], [1, 0, 2], [1, 1, 2], [0, 1, 2]
+                [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]
             ],
-            [[0, 0, 0], [0, 0, 2]],
-            [[0, 1, 0], [0, 1, 2]],
-            [[1, 0, 0], [1, 0, 2]],
-            [[1, 1, 0], [1, 1, 2]]
+            [[0, 0, 0], [0, 0, 1]],
+            [[0, 1, 0], [0, 1, 1]],
+            [[1, 0, 0], [1, 0, 1]],
+            [[1, 1, 0], [1, 1, 1]]
+        ], [
+            [
+                [2, 0, 0], [3, 0, 0], [3, 1, 0]
+            ],
+            [[2, 0, 0], [2.66, 0.33, 1]],
+            [[3, 0, 0], [2.66, 0.33, 1]],
+            [[3, 1, 0], [2.66, 0.33, 1]],
+        ]
         ];
         const campos = { x: 5, y: 5, z: 5 };
         const camrot = { x: 315, y: 0, z: 315 };
         const eq = { a: 1, b: 1, c: 1, d: -15 };
+        const sm = 150;
         const n = [1, 1, 1];
-        const tn = normalize([-1, -1, 1]);
+        const tn = normalize([-1, -1, 2]);
         const rn = normalize([-1, 1, 0]);
         const nn = normalize(n);
         const planedist = p => (Math.abs(eq.a * p[0] + eq.b * p[1] + eq.c * p[2] + eq.d) / Math.sqrt(Math.pow(eq.a, 2) + Math.pow(eq.b, 2) + Math.pow(eq.c, 2)));
@@ -57,44 +66,55 @@
             }
             return ang;
         }
+        function calcMuls(p) {
+            pd = planedist(p);
+            pp = project(p, pd);
+            //pv = vsub(pp, [5, 5, 5]);
+            //bmul = (rn[1] * (pp[0] - 5)) + (rn[0] * (5 - pp[1])) / (rn[0] * tn[1] - rn[1] * tn[0]);
+            bmul = -((((pp[1] - 5) / rn[1]) - ((pp[0] - 5) / rn[0])) / ((tn[0] / rn[0]) / (tn[1] / rn[1])));
+            amul = (pp[0] + bmul * tn[0] - 5) / rn[0];
+            //amul = bmul * (tn[0] / rn[0]) + ((pp[0] - 5) / rn[0]);
+            console.log(pp[0] + bmul * tn[0]);
+            console.log(pp[1] + bmul * tn[1]);
+            console.log(pp[2] + bmul * tn[2]);
+        }
         function cycle() {
             c.clearRect(0, 0, 512, 512);
-            for (i = 0; i < shape.length; i++) {
-                pd = planedist(shape[i][0]);
-                pp = project(shape[i][0], pd);
-                pv = vsub(pp, [5, 5, 5]);
-                bmul = (rn[1] * (pp[0] - 5)) + (rn[0] * (5 - pp[1])) / (rn[0] * tn[1] - rn[1] * tn[0]);
-                amul = (pp[0] + bmul * tn[0] - 5) / rn[0];
-                c.beginPath();
-                c.moveTo(256 + amul * 200, 256 + bmul * 200);
-                for (j = 1; j < shape[i].length; j++) {
-                    pd = planedist(shape[i][j]);
-                    pp = project(shape[i][j], pd);
-                    pv = vsub(pp, [5, 5, 5]);
-                    bmul = (rn[1] * (pp[0] - 5)) + (rn[0] * (5 - pp[1])) / (rn[0] * tn[1] - rn[1] * tn[0]);
-                    amul = (pp[0] + bmul * tn[0] - 5) / rn[0];
-                    c.lineTo(256 + amul * 200, 256 + bmul * 200);
+            for (ii = 0; ii < shapes.length; ii++) {
+                for (i = 0; i < shapes[ii].length; i++) {
+                    calcMuls(shapes[ii][i][0]);
+                    c.beginPath();
+                    c.moveTo(256 + amul * sm + 100, 256 + bmul * sm - 100);
+                    for (j = 1; j < shapes[ii][i].length; j++) {
+                        calcMuls(shapes[ii][i][j]);
+                        c.lineTo(256 + amul * sm + 100, 256 + bmul * sm - 100);
+                        c.stroke();
+                    }
+                    calcMuls(shapes[ii][i][0]);
+                    c.lineTo(256 + amul * sm + 100, 256 + bmul * sm - 100);
                     c.stroke();
                 }
-                pd = planedist(shape[i][0]);
-                pp = project(shape[i][0], pd);
-                pv = vsub(pp, [5, 5, 5]);
-                bmul = (rn[1] * (pp[0] - 5)) + (rn[0] * (5 - pp[1])) / (rn[0] * tn[1] - rn[1] * tn[0]);
-                amul = (pp[0] + bmul * tn[0] - 5) / rn[0];
-                c.lineTo(256 + amul * 200, 256 + bmul * 200);
-                c.stroke();
             }
-            for (i = 0; i < shape.length; i++) {
-                for (j = 0; j < shape[i].length; j++) {
-                    currang = v2ToAng([(shape[i][j][0] - 0.5) / (Math.SQRT2 / 2), (shape[i][j][1] - 0.5) / (Math.SQRT2 / 2)]);
+            for (i = 0; i < shapes[0].length; i++) {
+                for (j = 0; j < shapes[0][i].length; j++) {
+                    currang = v2ToAng([(shapes[0][i][j][0] - 0.5) / (Math.SQRT2 / 2), (shapes[0][i][j][1] - 0.5) / (Math.SQRT2 / 2)]);
                     currang = currang + 0.01;
-                    shape[i][j][0] = Math.cos(currang) * (Math.SQRT2 / 2) + 0.5;
-                    shape[i][j][1] = Math.sin(currang) * (Math.SQRT2 / 2) + 0.5;
+                    shapes[0][i][j][0] = Math.cos(currang) * (Math.SQRT2 / 2) + 0.5;
+                    shapes[0][i][j][1] = Math.sin(currang) * (Math.SQRT2 / 2) + 0.5;
+                }
+            }
+            for (i = 0; i < shapes[1].length; i++) {
+                for (j = 0; j < shapes[1][i].length; j++) {
+                    currang = v2ToAng([(shapes[1][i][j][0] - 2.5) / (Math.SQRT2 / 2), (shapes[1][i][j][1] - 0.5) / (Math.SQRT2 / 2)]);
+                    currang = currang + 0.015;
+                    shapes[1][i][j][0] = Math.cos(currang) * (Math.SQRT2 / 2) + 2.5;
+                    shapes[1][i][j][1] = Math.sin(currang) * (Math.SQRT2 / 2) + 0.5;
                 }
             }
         }
         //I DONT KNOW WHY I WASTED MY BRAINCELLS DOING THIS
-        setInterval(cycle, 1);
+        //cycle();
+        setInterval(cycle, 5);
     </script>
 </body>
 
